@@ -3,25 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Spotify Clone Ultimate</title>
+    <title>Spotify Clone Pro</title>
     <script src="https://www.youtube.com/iframe_api"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
 
         :root {
             --spotify-green: #1ed760;
             --bg-base: #121212;
             --bg-elevated: #242424;
-            --bg-highlight: #2a2a2a;
+            --bg-highlight: #333333;
             --text-base: #ffffff;
             --text-subdued: #a7a7a7;
-            --nav-bg: rgba(0,0,0,0.85);
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
 
         body {
-            font-family: 'Montserrat', -apple-system, sans-serif;
+            font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
             background-color: var(--bg-base);
             color: var(--text-base);
             height: 100vh;
@@ -31,126 +30,106 @@
             flex-direction: column;
         }
 
-        /* --- ICONS --- */
-        svg { fill: currentColor; }
+        /* --- HEADER & CHIPS --- */
+        .top-header {
+            display: flex;
+            align-items: center;
+            padding: 20px 20px 10px;
+            gap: 15px;
+            position: sticky;
+            top: 0;
+            background: var(--bg-base);
+            z-index: 10;
+        }
+        .profile-icon {
+            width: 35px; height: 35px; background: #ffeb3b; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center; color: black; font-weight: bold; font-size: 18px;
+        }
+        .top-header h1 { font-size: 24px; font-weight: 700; flex: 1; }
+        .header-icons svg { fill: white; width: 24px; height: 24px; margin-left: 15px; cursor: pointer; }
+
+        .chip-container {
+            display: flex; gap: 8px; padding: 0 20px 15px; overflow-x: auto; scrollbar-width: none;
+            background: var(--bg-base); position: sticky; top: 65px; z-index: 10;
+        }
+        .chip-container::-webkit-scrollbar { display: none; }
+        .chip {
+            background: var(--bg-highlight); color: var(--text-base); padding: 8px 16px; 
+            border-radius: 20px; font-size: 13px; white-space: nowrap; cursor: pointer; font-weight: 600;
+        }
+        .chip.active { background: var(--spotify-green); color: black; }
+
+        /* --- VIEWS --- */
+        .view { flex: 1; overflow-y: auto; padding-bottom: 140px; display: none; }
+        .view.active { display: block; }
+
+        /* --- START VIEW (SCREENSHOT 3) --- */
+        .start-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 20px 20px; }
+        .grid-item {
+            background: var(--bg-highlight); border-radius: 4px; display: flex; align-items: center;
+            overflow: hidden; cursor: pointer; transition: background 0.2s;
+        }
+        .grid-item:active { background: #444; }
+        .grid-item img { width: 56px; height: 56px; object-fit: cover; box-shadow: 2px 0 5px rgba(0,0,0,0.3); }
+        .grid-item span { padding: 0 10px; font-size: 13px; font-weight: 600; flex: 1; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+        .feed-item { padding: 0 20px 20px; display: flex; flex-direction: column; gap: 10px; cursor: pointer; }
+        .feed-item-header { display: flex; align-items: center; gap: 15px; }
+        .feed-item-header img { width: 64px; height: 64px; border-radius: 8px; object-fit: cover; }
+        .feed-info h4 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+        .feed-info p { font-size: 13px; color: var(--text-subdued); }
+
+        /* --- LIBRARY VIEW (SCREENSHOT 1) --- */
+        .sort-bar { padding: 0 20px 10px; font-size: 13px; font-weight: 600; display: flex; justify-content: space-between; color: var(--text-subdued); }
+        .list-item { display: flex; align-items: center; padding: 10px 20px; cursor: pointer; }
+        .list-item img { width: 64px; height: 64px; object-fit: cover; margin-right: 15px; }
+        .list-item.round img { border-radius: 50%; }
+        .list-item.square img { border-radius: 4px; }
+        .list-info { flex: 1; overflow: hidden; }
+        .list-title { font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; color: var(--text-base); }
+        .list-title.green { color: var(--spotify-green); }
+        .list-subtitle { font-size: 13px; color: var(--text-subdued); display: flex; align-items: center; gap: 5px; }
+
+        /* --- SEARCH VIEW --- */
+        .search-container { padding: 20px; }
+        .search-container input {
+            width: 100%; padding: 14px 45px; border-radius: 4px; border: none; background: #fff;
+            color: #000; font-size: 14px; font-weight: 600;
+        }
+        .search-results-section { padding: 0 20px; margin-bottom: 20px; }
+        .search-results-section h3 { font-size: 18px; margin-bottom: 15px; }
 
         /* --- NAVIGATION BOTTOM --- */
         .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            height: 65px;
-            background: var(--nav-bg);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            z-index: 50;
-            border-top: 1px solid rgba(255,255,255,0.1);
+            position: fixed; bottom: 0; width: 100%; height: 65px;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(15px);
+            display: flex; justify-content: space-around; align-items: center; z-index: 50;
+            background: linear-gradient(transparent, rgba(0,0,0,1));
         }
-
         .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            color: var(--text-subdued);
-            font-size: 10px;
-            cursor: pointer;
-            width: 25%;
-            padding-top: 5px;
+            display: flex; flex-direction: column; align-items: center; color: var(--text-subdued);
+            font-size: 10px; cursor: pointer; transition: color 0.2s; width: 25%; margin-top: 10px;
         }
         .nav-item.active { color: var(--text-base); }
-        .nav-item svg { width: 24px; height: 24px; margin-bottom: 4px; }
-
-        /* --- VIEWS --- */
-        .view {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px;
-            padding-top: 50px;
-            padding-bottom: 150px;
-            display: none;
-        }
-        .view.active { display: block; }
-        .view-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-        .view-header h1 { font-size: 24px; font-weight: 700; margin: 0; }
-        .header-icons { display: flex; gap: 20px; }
-        .header-icons svg { width: 24px; height: 24px; }
-
-        /* --- FILTER PILLS --- */
-        .filter-scroll { display: flex; overflow-x: auto; gap: 8px; margin-bottom: 20px; scrollbar-width: none; }
-        .filter-scroll::-webkit-scrollbar { display: none; }
-        .filter-pill {
-            background: #2a2a2a; color: white; padding: 8px 16px;
-            border-radius: 20px; font-size: 13px; font-weight: 500; white-space: nowrap; cursor: pointer;
-        }
-        .filter-pill.active { background: var(--spotify-green); color: black; }
-
-        /* --- START GRID (Screenshot 3) --- */
-        .start-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 30px;
-        }
-        .start-grid-item {
-            background: rgba(255,255,255,0.1); border-radius: 4px; display: flex; align-items: center;
-            overflow: hidden; cursor: pointer;
-        }
-        .start-grid-item img { width: 56px; height: 56px; object-fit: cover; }
-        .start-grid-item span { padding: 0 10px; font-size: 13px; font-weight: 600; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-
-        /* --- LISTS (Library & Podcasts) --- */
-        .list-container { display: flex; flex-direction: column; gap: 16px; }
-        .list-item { display: flex; align-items: center; cursor: pointer; }
-        .list-item img { width: 64px; height: 64px; object-fit: cover; margin-right: 12px; }
-        .list-item img.round { border-radius: 50%; }
-        .list-item img.square { border-radius: 4px; }
-        .list-info { flex: 1; overflow: hidden; }
-        .list-title { font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-base); }
-        .list-title.green { color: var(--spotify-green); }
-        .list-subtitle { display: flex; align-items: center; font-size: 13px; color: var(--text-subdued); margin-top: 4px; gap: 4px; }
-        .pin-icon { color: var(--spotify-green); width: 12px; height: 12px; transform: rotate(45deg); }
-
-        /* --- SEARCH --- */
-        .search-box {
-            background: #fff; border-radius: 4px; display: flex; align-items: center; padding: 10px 15px; margin-bottom: 20px;
-        }
-        .search-box input { border: none; outline: none; flex: 1; font-size: 16px; font-weight: 600; color: #000; margin-left: 10px; }
-
-        /* --- PLUS MENU OVERLAY (Screenshot 5) --- */
-        .overlay-bg {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7); z-index: 100; display: none; opacity: 0; transition: opacity 0.3s;
-        }
-        .overlay-bg.active { display: block; opacity: 1; }
-        .bottom-sheet {
-            position: fixed; bottom: -100%; left: 0; width: 100%; background: #242424;
-            border-radius: 20px 20px 0 0; z-index: 101; padding: 20px; transition: bottom 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
-        }
-        .bottom-sheet.active { bottom: 0; }
-        .bs-item { display: flex; align-items: center; padding: 15px 0; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .bs-icon { width: 48px; height: 48px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; }
-        .bs-icon svg { width: 24px; height: 24px; fill: var(--text-subdued); }
-        .bs-text { display: flex; flex-direction: column; }
-        .bs-text strong { font-size: 16px; margin-bottom: 4px; }
-        .bs-text span { font-size: 13px; color: var(--text-subdued); }
+        .nav-item svg { width: 24px; height: 24px; margin-bottom: 4px; fill: currentColor; }
 
         /* --- MINI PLAYER --- */
         .mini-player {
             position: fixed; bottom: 70px; left: 8px; right: 8px; height: 56px;
-            background: #404040; border-radius: 6px; display: none; align-items: center;
-            padding: 8px; z-index: 60; box-shadow: 0 4px 12px rgba(0,0,0,0.5); cursor: pointer;
+            background: #2a2a2a; border-radius: 6px; display: flex; align-items: center;
+            padding: 8px; z-index: 60; box-shadow: 0 4px 12px rgba(0,0,0,0.5); display: none; cursor: pointer;
         }
         .mini-player img { width: 40px; height: 40px; border-radius: 4px; object-fit: cover; }
         .mini-info { flex: 1; margin: 0 10px; overflow: hidden; }
         .mini-title { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .mini-artist { font-size: 12px; color: var(--text-subdued); }
         .mini-controls { display: flex; align-items: center; gap: 15px; padding-right: 10px; }
-        .mini-controls svg { width: 24px; height: 24px; fill: white; }
+        .mini-play-btn { width: 24px; height: 24px; fill: white; }
 
-        /* --- FULL SCREEN PLAYER (Screenshot 1) --- */
+        /* --- FULL SCREEN PLAYER --- */
         .full-player {
             position: fixed; top: 100%; left: 0; width: 100%; height: 100%;
-            background-color: #121212; z-index: 200; transition: top 0.3s ease-out;
+            background-color: var(--bg-base); z-index: 100; transition: top 0.3s ease-out;
             display: flex; flex-direction: column; padding: 20px; overflow: hidden;
         }
         .full-player.active { top: 0; }
@@ -158,177 +137,191 @@
             position: absolute; top: -20%; left: -20%; width: 140%; height: 140%;
             background-size: cover; background-position: center; filter: blur(60px) brightness(0.4); z-index: -1;
         }
-        .fp-header { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; }
-        .fp-header svg { width: 24px; height: 24px; cursor: pointer; }
+        .fp-header { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+        .fp-header svg { width: 24px; height: 24px; fill: white; cursor: pointer; }
         .fp-header-text { text-align: center; font-size: 11px; letter-spacing: 1px; color: white; }
         .fp-header-text b { display: block; font-size: 13px; margin-top: 2px; }
-        .fp-cover {
-            width: 100%; aspect-ratio: 1/1; margin-top: 30px; border-radius: 8px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5); object-fit: cover; background: #000;
+        
+        .fp-image-container {
+            width: 100%; aspect-ratio: 1 / 1; margin-top: 30px; border-radius: 8px;
+            overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5); background: #000; position: relative;
         }
-        #yt-player-container { display: none; } /* Versteckt das YT Video, wir zeigen nur das Coverbild für echtes Spotify Feeling */
+        .fp-image-container img { width: 100%; height: 100%; object-fit: cover; position: absolute; top:0; left:0; z-index: 2; pointer-events:none;}
+        #yt-player-placeholder { width: 100%; height: 100%; position: absolute; top:0; left:0; z-index: 1;}
 
         .fp-track-info { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 40px; }
         .fp-title { font-size: 24px; font-weight: 700; margin: 0; }
         .fp-artist { font-size: 16px; color: var(--text-subdued); margin: 5px 0 0 0; }
         .fp-check { width: 24px; height: 24px; fill: var(--spotify-green); }
 
-        .fp-slider {
-            -webkit-appearance: none; width: 100%; height: 4px; background: rgba(255,255,255,0.2);
-            border-radius: 2px; outline: none; margin-top: 25px;
-        }
+        .fp-progress-container { margin-top: 25px; }
+        .fp-slider { -webkit-appearance: none; width: 100%; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; outline: none; }
         .fp-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: white; border-radius: 50%; cursor: pointer; }
         .fp-time { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-subdued); margin-top: 8px; font-variant-numeric: tabular-nums; }
 
         .fp-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; }
-        .fp-controls svg { fill: white; width: 28px; height: 28px; cursor: pointer; }
-        .play-pause-btn { width: 64px; height: 64px; background: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; }
-        .play-pause-btn svg { fill: black; width: 32px; height: 32px; }
+        .fp-controls svg { fill: white; width: 24px; height: 24px; cursor: pointer; }
+        .fp-controls .play-pause { width: 64px; height: 64px; background: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; }
+        .fp-controls .play-pause svg { fill: black; width: 28px; height: 28px; }
 
-        .fp-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: auto; margin-bottom: 20px; font-size: 12px; font-weight: 600; color: var(--text-subdued);}
+        /* --- BOTTOM SHEET MENU (PLUS MENU) --- */
+        .bottom-sheet-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); z-index: 200; opacity: 0; transition: opacity 0.3s;
+        }
+        .bottom-sheet-overlay.active { display: block; opacity: 1; }
+        .bottom-sheet {
+            position: absolute; bottom: 0; left: 0; width: 100%; background: #282828;
+            border-radius: 20px 20px 0 0; padding: 10px 20px 30px; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
+        }
+        .bottom-sheet.active { transform: translateY(0); }
+        .bs-handle { width: 40px; height: 4px; background: #555; border-radius: 2px; margin: 10px auto 20px; }
+        .bs-item { display: flex; align-items: center; gap: 15px; padding: 15px 0; cursor: pointer; }
+        .bs-icon { background: #3e3e3e; border-radius: 50%; width: 48px; height: 48px; display: flex; justify-content: center; align-items: center; }
+        .bs-icon svg { width: 24px; height: 24px; fill: white; }
+        .bs-text h4 { font-size: 16px; margin: 0 0 4px 0; }
+        .bs-text p { font-size: 13px; color: var(--text-subdued); margin: 0; }
+        .bs-close { position: absolute; bottom: -80px; left: 50%; transform: translateX(-50%); background: #282828; border-radius: 50%; width: 48px; height: 48px; display: flex; justify-content: center; align-items: center; }
+
     </style>
 </head>
 <body>
 
-    <audio id="native-audio"></audio>
-    <div id="yt-player-container"></div>
+    <audio id="native-audio" style="display:none;"></audio>
 
     <div id="view-start" class="view active">
-        <div class="view-header">
-            <div style="display:flex; align-items:center; gap:10px;">
-                <div style="width:32px; height:32px; background:#e0e0e0; border-radius:50%; display:flex; justify-content:center; align-items:center; color:black; font-weight:bold;">P</div>
-                <div class="filter-scroll" style="margin:0;">
-                    <div class="filter-pill active">Alle</div>
-                    <div class="filter-pill">Musik</div>
-                    <div class="filter-pill">Podcasts</div>
-                    <div class="filter-pill">Hörbücher</div>
+        <div class="top-header">
+            <div class="profile-icon">XX</div>
+            <div class="chip-container" style="position:static; padding:0;">
+                <span class="chip active">Alle</span>
+                <span class="chip">Musik</span>
+                <span class="chip">Podcasts</span>
+                <span class="chip">Hörbücher</span>
+            </div>
+        </div>
+
+        <div class="start-grid" id="start-grid-container">
+            </div>
+
+        <div class="feed-item" onclick="playCustom('podcast')">
+            <div class="feed-item-header">
+                <img src="https://is1-ssl.mzstatic.com/image/thumb/Podcasts113/v4/f2/87/40/f2874051-7bfa-c584-3677-22f30691e847/mza_10336214040947094042.jpg/316x316bb.webp">
+                <div class="feed-info">
+                    <h4>Die Epstein-Files: Wer steht drin?</h4>
+                    <p>MrWissen2go • 100.000+ plays • 12. Feb.</p>
                 </div>
             </div>
         </div>
-
-        <div class="start-grid" id="start-grid">
-            </div>
-
-        <h2 style="font-size:18px; margin-bottom:15px;">Für dich empfohlen</h2>
-        <div class="list-container" id="start-list">
-            </div>
     </div>
 
     <div id="view-search" class="view">
-        <div class="view-header"><h1>Suchen</h1></div>
-        <div class="search-box">
-            <svg viewBox="0 0 24 24" width="24" height="24" fill="black"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-            <input type="text" id="searchInput" placeholder="Podcasts oder Songs suchen..." onkeydown="handleSearch(event)">
+        <div class="top-header"><h1>Suchen</h1></div>
+        <div class="search-container">
+            <div style="position:relative;">
+                <svg style="position:absolute; left:12px; top:14px; width:20px; height:20px; fill:black;" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                <input type="text" id="searchInput" placeholder="Was möchtest du hören?" oninput="performSearch()">
+            </div>
         </div>
-        <div id="search-spinner" style="display:none; text-align:center; color:var(--text-subdued);">Suche über iTunes & Local...</div>
-        <div class="list-container" id="search-results"></div>
+        
+        <div class="search-results-section">
+            <h3>Lokale Bibliothek & YouTube</h3>
+            <div id="search-local-results"></div>
+        </div>
+
+        <div class="search-results-section">
+            <h3>Podcasts (iTunes API)</h3>
+            <div id="search-itunes-results" style="color:var(--text-subdued); font-size:13px;">Tippe etwas ein, um weltweite Podcasts zu suchen...</div>
+        </div>
     </div>
 
     <div id="view-library" class="view">
-        <div class="view-header">
-            <div style="display:flex; align-items:center; gap:10px;">
-                <div style="width:32px; height:32px; background:#e0e0e0; border-radius:50%; display:flex; justify-content:center; align-items:center; color:black; font-weight:bold;">P</div>
-                <h1>Bibliothek</h1>
-            </div>
+        <div class="top-header">
+            <div class="profile-icon">XX</div>
+            <h1>Bibliothek</h1>
             <div class="header-icons">
-                <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                <svg viewBox="0 0 24 24" onclick="openPlusMenu()"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                <svg onclick="switchView('search')" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                <svg onclick="openPlusMenu()" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
             </div>
         </div>
 
-        <div class="filter-scroll">
-            <div class="filter-pill">Playlists</div>
-            <div class="filter-pill">Podcasts</div>
-            <div class="filter-pill">Künstler*innen</div>
-            <div class="filter-pill">Heruntergeladen</div>
+        <div class="chip-container">
+            <span class="chip">Playlists</span>
+            <span class="chip">Podcasts</span>
+            <span class="chip">Künstler*innen</span>
+            <span class="chip">Heruntergeladen</span>
         </div>
 
-        <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:600; margin-bottom:15px; cursor:pointer;">
+        <div class="sort-bar">
             <span>↑↓ Zuletzt</span>
-            <svg viewBox="0 0 24 24" width="16" height="16"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
+            <svg viewBox="0 0 24 24" style="fill:var(--text-subdued); width:18px; height:18px;"><path d="M3 3h8v8H3V3zm0 10h8v8H3v-8zM13 3h8v8h-8V3zm0 10h8v8h-8v-8z"/></svg>
         </div>
 
-        <div class="list-container" id="library-list"></div>
+        <div id="library-list"></div>
     </div>
 
-    <div class="mini-player" id="miniPlayer" onclick="toggleFullScreenPlayer(true)">
+    <div class="mini-player" id="miniPlayer" onclick="openPlayer()">
         <img id="mini-img" src="">
         <div class="mini-info">
             <div class="mini-title" id="mini-title">Titel</div>
             <div class="mini-artist" id="mini-artist">Artist</div>
         </div>
         <div class="mini-controls">
-            <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
-            <svg id="mini-play-btn" onclick="togglePlay(event)" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            <svg viewBox="0 0 24 24" style="fill:var(--spotify-green); width:20px; height:20px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+            <svg id="mini-play-btn" onclick="togglePlay(event)" viewBox="0 0 24 24" class="mini-play-btn"><path d="M8 5v14l11-7z"/></svg>
         </div>
     </div>
 
     <div class="full-player" id="fullPlayer">
         <div class="fp-bg" id="fp-bg"></div>
+        
         <div class="fp-header">
-            <svg onclick="toggleFullScreenPlayer(false)" viewBox="0 0 24 24"><path d="M15.957 2.793a1 1 0 010 1.414L8.164 12l7.793 7.793a1 1 0 11-1.414 1.414L5.336 12l9.207-9.207a1 1 0 011.414 0z" transform="rotate(-90 12 12)"/></svg>
-            <div class="fp-header-text">WIEDERGABE AUS PLAYLIST<b id="fp-context">Chill-Mix 2025</b></div>
+            <svg onclick="closePlayer()" viewBox="0 0 24 24"><path d="M15.957 2.793a1 1 0 010 1.414L8.164 12l7.793 7.793a1 1 0 11-1.414 1.414L5.336 12l9.207-9.207a1 1 0 011.414 0z" transform="rotate(-90 12 12)"/></svg>
+            <div class="fp-header-text"><span id="fp-context-label">WIEDERGABE AUS PLAYLIST</span><b id="fp-context">Deine Bibliothek</b></div>
             <svg viewBox="0 0 24 24"><path d="M12 3a2 2 0 100 4 2 2 0 000-4zm0 7a2 2 0 100 4 2 2 0 000-4zm0 7a2 2 0 100 4 2 2 0 000-4z"/></svg>
         </div>
-        
-        <img class="fp-cover" id="fp-cover" src="">
+
+        <div class="fp-image-container">
+            <img id="fp-cover-img" src="">
+            <div id="yt-player-placeholder"></div>
+        </div>
 
         <div class="fp-track-info">
-            <div>
-                <h2 class="fp-title" id="fp-title">Anchor</h2>
-                <p class="fp-artist" id="fp-artist">Alex Baker, Hanging Valleys</p>
+            <div style="flex:1; overflow:hidden; padding-right:15px;">
+                <h2 class="fp-title" id="fp-title">Titel</h2>
+                <p class="fp-artist" id="fp-artist">Artist</p>
             </div>
             <svg class="fp-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M10 16l-4-4 1.41-1.41L10 13.17l6.59-6.59L18 8l-8 8z" fill="#000"/></svg>
         </div>
 
-        <input type="range" class="fp-slider" id="fp-slider" value="0" min="0" max="100" onchange="seekAudio(this.value)">
-        <div class="fp-time">
-            <span id="fp-time-current">0:00</span>
-            <span id="fp-time-total">0:00</span>
+        <div class="fp-progress-container">
+            <input type="range" class="fp-slider" id="fp-slider" value="0" min="0" max="100" onchange="seekTo(this.value)">
+            <div class="fp-time">
+                <span id="fp-time-current">0:00</span>
+                <span id="fp-time-total">0:00</span>
+            </div>
         </div>
 
         <div class="fp-controls">
-            <svg viewBox="0 0 24 24" style="fill: var(--spotify-green)"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>
-            <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
-            <div class="play-pause-btn" onclick="togglePlay(event)">
+            <svg viewBox="0 0 24 24"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>
+            <svg onclick="prevTrack()" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+            <div class="play-pause" onclick="togglePlay(event)">
                 <svg id="fp-play-btn" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
             </div>
-            <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+            <svg onclick="nextTrack()" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
             <svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>
-        </div>
-
-        <div class="fp-bottom">
-            <span>[Q] Lossless</span>
-            <div style="display:flex; gap:15px">
-                <svg viewBox="0 0 24 24" width="20" height="20"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
-                <svg viewBox="0 0 24 24" width="20" height="20"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h12v2H4z"/></svg>
-            </div>
-        </div>
-    </div>
-
-    <div class="overlay-bg" id="overlayBg" onclick="closePlusMenu()"></div>
-    <div class="bottom-sheet" id="plusMenu">
-        <div class="bs-item" onclick="createNewPlaylist()">
-            <div class="bs-icon">
-                <svg viewBox="0 0 24 24"><path d="M15 4v12.5a3.5 3.5 0 11-2-3.17V6h6V4h-4zM4 6h8v2H4zm0 5h8v2H4zm0 5h5v2H4z"/></svg>
-            </div>
-            <div class="bs-text">
-                <strong>Playlist</strong>
-                <span>Erstelle eine Playlist mit Songs oder Folgen.</span>
-            </div>
         </div>
     </div>
 
     <div class="bottom-nav">
-        <div class="nav-item active" onclick="switchTab('start', this)">
+        <div class="nav-item active" onclick="switchView('start', this)">
             <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
             Start
         </div>
-        <div class="nav-item" onclick="switchTab('search', this)">
-            <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        <div class="nav-item" onclick="switchView('search', this)">
+            <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
             Suchen
         </div>
-        <div class="nav-item" onclick="switchTab('library', this)">
+        <div class="nav-item" onclick="switchView('library', this)">
             <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12zM10 9h8v2h-8zm0 3h4v2h-4zm0-6h8v2h-8z"/></svg>
             Bibliothek
         </div>
@@ -338,243 +331,299 @@
         </div>
     </div>
 
+    <div class="bottom-sheet-overlay" id="bs-overlay" onclick="closePlusMenu()">
+        <div class="bottom-sheet" id="bs-menu" onclick="event.stopPropagation()">
+            <div class="bs-handle"></div>
+            <div class="bs-item" onclick="createNewPlaylist()">
+                <div class="bs-icon">
+                    <svg viewBox="0 0 24 24"><path d="M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z"/></svg>
+                </div>
+                <div class="bs-text">
+                    <h4>Playlist</h4>
+                    <p>Erstelle eine Playlist mit Songs oder Folgen.</p>
+                </div>
+            </div>
+            
+            <div class="bs-close" onclick="closePlusMenu()">
+                <svg viewBox="0 0 24 24" style="fill:white; width:24px; height:24px;"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            </div>
+        </div>
+    </div>
+
 <script>
-    // --- DATEN & LOCAL STORAGE ---
-    const defaultLibrary = [
-        { id: "1", type: "playlist", title: "Chill-Mix 2025", creator: "Patrick", pinned: false, cover: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=200", isGrid: true },
-        { id: "2", type: "playlist", title: "Lieblingssongs", creator: "Patrick", pinned: true, cover: "https://via.placeholder.com/200/404040/ffffff?text=%E2%99%A5", isGrid: true },
-        { id: "3", type: "podcast", title: "Wissen mit Johnny", creator: "Johnny", pinned: true, cover: "https://via.placeholder.com/200/1ed760/000?text=Wissen", isGrid: false },
-        { id: "4", type: "playlist", title: "JBL Bass Boosted", creator: "Spotify", pinned: false, cover: "https://images.unsplash.com/photo-1615826932727-81f964af4ea7?w=200", isGrid: true },
-        // Echter YouTube Song als Beispiel
-        { id: "4NRXx6U8ABQ", type: "song", title: "Blinding Lights", creator: "The Weeknd", cover: "https://img.youtube.com/vi/4NRXx6U8ABQ/hqdefault.jpg" }
+    // --- DATEN & STATE ---
+    // Startseiten Grid (Screenshot 3)
+    const startItems = [
+        { title: "Chill-Mix 2025", img: "https://i.scdn.co/image/ab67706c0000da8490a1e35d038dc79860b2f518", type: "yt", ytId: "jfKfPfyJRdk" },
+        { title: "Lieblingssongs", img: "https://misc.scdn.co/liked-songs/liked-songs-64.png", type: "yt", ytId: "4NRXx6U8ABQ" },
+        { title: "{ungeskriptet} - KI in 2 Jahren", img: "https://i.scdn.co/image/ab6765630000ba8a7f292c300dc94043b2edcf30", type: "yt", ytId: "S_Y2lO0q1_A" },
+        { title: "Playlist.", img: "https://i.scdn.co/image/ab67706c0000da841ce250d402b9e672721ab85c", type: "yt", ytId: "9oD5M_yN1H0" },
+        { title: "Techq Quest", img: "https://i.scdn.co/image/ab67706c0000da84c478a05c75abfba6af2097e3", type: "yt", ytId: "fKopy74weus" },
+        { title: "Best EDM Songs", img: "https://i.scdn.co/image/ab67706c0000da84bf41d4c22cc5cba5701ce1f6", type: "yt", ytId: "ALZHF5UqnU4" }
     ];
 
-    let library = JSON.parse(localStorage.getItem('ultimate_lib')) || defaultLibrary;
-    let currentTrack = null;
-    let isPlaying = false;
-    let ytPlayerReady = false;
+    // Bibliothek Daten (Screenshot 1)
+    let myLibrary = [
+        { title: "Wissen mit Johnny", artist: "Podcast • Johnny", type: "yt", ytId: "2nB12QYnB8k", imgType: "square", isGreen: false },
+        { title: "My top tracks playlist", artist: "Playlist • Patrick", type: "yt", ytId: "4NRXx6U8ABQ", imgType: "square", isGreen: false },
+        { title: "Chill-Mix 2025", artist: "Gemixte Playlist • Patrick", type: "yt", ytId: "jfKfPfyJRdk", imgType: "square", isGreen: true },
+        { title: "{ungeskriptet} - Gespräche...", artist: "Podcast • Ben Berndt", type: "yt", ytId: "S_Y2lO0q1_A", imgType: "square", isGreen: false },
+        { title: "extrembequem", artist: "Podcast • extrembequem", type: "yt", ytId: "b8I-7Wk_Vbc", imgType: "square", isGreen: false },
+        { title: "Playlist.", artist: "Gemixte Playlist • Patrick", type: "yt", ytId: "9oD5M_yN1H0", imgType: "square", isGreen: false },
+        { title: "Lieblingssongs", artist: "Playlist • 140 Songs", type: "yt", ytId: "V1Pl8CzNzCw", imgType: "square", isGreen: false }
+    ];
+
     let ytPlayer;
+    let audioPlayer = document.getElementById('native-audio');
+    let currentMode = 'yt'; // 'yt' oder 'audio'
+    let isPlaying = false;
     let progressInterval;
-    const audioEl = document.getElementById('native-audio');
+    let currentTrackData = null;
 
-    const playSVG = '<path d="M8 5v14l11-7z"/>';
-    const pauseSVG = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+    const playIcon = '<path d="M8 5v14l11-7z"/>';
+    const pauseIcon = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
 
-    // --- YOUTUBE INIT ---
+    // --- INITIALISIERUNG ---
     function onYouTubeIframeAPIReady() {
-        ytPlayer = new YT.Player('yt-player-container', {
-            height: '0', width: '0', videoId: '4NRXx6U8ABQ',
-            playerVars: { 'autoplay': 0, 'controls': 0 },
-            events: {
-                'onReady': () => { ytPlayerReady = true; },
-                'onStateChange': onYTStateChange
-            }
+        ytPlayer = new YT.Player('yt-player-placeholder', {
+            height: '100%', width: '100%', videoId: '',
+            playerVars: { 'autoplay': 0, 'controls': 0, 'disablekb': 1, 'fs': 0, 'modestbranding': 1, 'playsinline': 1 },
+            events: { 'onStateChange': onPlayerStateChange }
         });
     }
 
-    function onYTStateChange(event) {
+    function onPlayerStateChange(event) {
+        if(currentMode !== 'yt') return;
         if (event.data == YT.PlayerState.PLAYING) {
-            isPlaying = true; updatePlayIcons(pauseSVG); startProgress();
-        } else if (event.data == YT.PlayerState.PAUSED) {
-            isPlaying = false; updatePlayIcons(playSVG); clearInterval(progressInterval);
+            isPlaying = true;
+            updatePlayButtons(pauseIcon);
+            startProgressBar();
+            document.getElementById('fp-slider').max = ytPlayer.getDuration();
+            document.getElementById('fp-time-total').innerText = formatTime(ytPlayer.getDuration());
+        } else if (event.data == YT.PlayerState.PAUSED || event.data == YT.PlayerState.ENDED) {
+            isPlaying = false;
+            updatePlayButtons(playIcon);
+            clearInterval(progressInterval);
         }
     }
 
-    // --- AUDIO INIT (iTunes Podcasts) ---
-    audioEl.addEventListener('play', () => { isPlaying = true; updatePlayIcons(pauseSVG); startProgress(); });
-    audioEl.addEventListener('pause', () => { isPlaying = false; updatePlayIcons(playSVG); clearInterval(progressInterval); });
+    // Audio Player Events (Für iTunes Podcasts)
+    audioPlayer.addEventListener('play', () => { isPlaying = true; updatePlayButtons(pauseIcon); startProgressBar(); });
+    audioPlayer.addEventListener('pause', () => { isPlaying = false; updatePlayButtons(playIcon); clearInterval(progressInterval); });
+    audioPlayer.addEventListener('loadedmetadata', () => {
+        document.getElementById('fp-slider').max = audioPlayer.duration;
+        document.getElementById('fp-time-total').innerText = formatTime(audioPlayer.duration);
+    });
 
-    // --- RENDER VIEWS ---
+    // --- RENDER FUNKTIONEN ---
     function renderApp() {
-        // Startseite: Grid
-        const gridEl = document.getElementById('start-grid');
-        gridEl.innerHTML = '';
-        library.filter(i => i.isGrid).slice(0, 6).forEach(item => {
-            gridEl.innerHTML += `
-                <div class="start-grid-item" onclick="playMock('${item.title}')">
-                    <img src="${item.cover}"><span>${item.title}</span>
-                </div>`;
+        // Startseite Grid rendern
+        const grid = document.getElementById('start-grid-container');
+        grid.innerHTML = '';
+        startItems.forEach(item => {
+            grid.innerHTML += `
+                <div class="grid-item" onclick="playCustom('yt', '${item.ytId}', '${item.title}', 'Mix')">
+                    <img src="${item.img}">
+                    <span>${item.title}</span>
+                </div>
+            `;
         });
 
-        // Bibliothek & Start Liste
-        const libEl = document.getElementById('library-list');
-        const startListEl = document.getElementById('start-list');
-        libEl.innerHTML = ''; startListEl.innerHTML = '';
-
-        library.forEach(item => {
-            const html = `
-                <div class="list-item" onclick="playItem('${item.id}')">
-                    <img src="${item.cover}" class="${item.type === 'podcast' ? 'round' : 'square'}">
+        // Bibliothek rendern
+        const libList = document.getElementById('library-list');
+        libList.innerHTML = '';
+        myLibrary.forEach((item, index) => {
+            const imgUrl = item.img || `https://img.youtube.com/vi/${item.ytId}/hqdefault.jpg`;
+            const titleClass = item.isGreen ? 'list-title green' : 'list-title';
+            libList.innerHTML += `
+                <div class="list-item ${item.imgType}" onclick="playCustom('yt', '${item.ytId}', '${item.title}', '${item.artist}')">
+                    <img src="${imgUrl}">
                     <div class="list-info">
-                        <div class="list-title ${item.pinned ? 'green' : ''}">${item.title}</div>
-                        <div class="list-subtitle">
-                            ${item.pinned ? `<svg class="pin-icon" viewBox="0 0 24 24"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5v6l1 2 1-2v-6h5v-2l-2-2z"/></svg>` : ''}
-                            ${item.type === 'playlist' ? 'Playlist' : 'Podcast'} • ${item.creator}
-                        </div>
+                        <div class="${titleClass}">${item.title}</div>
+                        <div class="list-subtitle">${item.artist}</div>
                     </div>
-                </div>`;
-            libEl.innerHTML += html;
-            if(!item.isGrid) startListEl.innerHTML += html; // Podcasts auch auf Start
+                </div>
+            `;
         });
     }
 
-    // --- LOGIK: SUCHEN & iTUNES API ---
-    async function handleSearch(e) {
-        if (e.key === 'Enter') {
-            const q = document.getElementById('searchInput').value;
-            if(!q) return;
-            
-            document.getElementById('search-spinner').style.display = 'block';
-            const resEl = document.getElementById('search-results');
-            resEl.innerHTML = '';
-
-            try {
-                // Echte iTunes Podcast Suche!
-                const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=podcast&limit=10`);
-                const data = await res.json();
-                
-                document.getElementById('search-spinner').style.display = 'none';
-
-                data.results.forEach(pod => {
-                    resEl.innerHTML += `
-                        <div class="list-item" onclick="playStream('${pod.feedUrl}', '${pod.collectionName.replace(/'/g,"")}', '${pod.artistName.replace(/'/g,"")}', '${pod.artworkUrl600}')">
-                            <img src="${pod.artworkUrl100}" class="round">
-                            <div class="list-info">
-                                <div class="list-title">${pod.collectionName}</div>
-                                <div class="list-subtitle">Podcast • ${pod.artistName}</div>
-                            </div>
-                            <div style="font-size:20px; padding:10px;">+</div>
-                        </div>`;
-                });
-            } catch(e) {
-                document.getElementById('search-spinner').innerHTML = 'Fehler bei der Suche.';
-            }
-        }
-    }
-
-    // --- PLAYER LOGIK ---
-    function playItem(id) {
-        const item = library.find(i => i.id === id);
-        if(!item) return;
-
-        if(item.type === 'song') {
-            // YouTube
-            audioEl.pause();
-            if(ytPlayerReady) ytPlayer.loadVideoById(item.id);
-            setUIInfo(item.title, item.creator, item.cover, 'song');
-        } else {
-            // Playlists/Mock
-            playMock(item.title);
-        }
-    }
-
-    // Wenn man einen echten Podcast aus iTunes abspielt
-    function playStream(url, title, artist, cover) {
-        if(ytPlayerReady) ytPlayer.pauseVideo();
-        
-        // iTunes API liefert oft keine direkten mp3s im Search, aber wir simulieren es
-        // Hier müsste man eigentlich den RSS (feedUrl) parsen. Fürs Feeling spielen wir einen Demo-Ton.
-        audioEl.src = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"; 
-        audioEl.play();
-        setUIInfo(title, artist, cover, 'podcast');
-    }
-
-    function playMock(name) {
-        setUIInfo(name, "Wird abgespielt...", "https://via.placeholder.com/400/282828/ffffff?text="+name, 'mock');
-    }
-
-    function setUIInfo(title, artist, cover, type) {
-        currentTrack = { title, artist, type };
-        document.getElementById('miniPlayer').style.display = 'flex';
-        document.getElementById('mini-title').innerText = title;
-        document.getElementById('mini-artist').innerText = artist;
-        document.getElementById('mini-img').src = cover;
-
-        document.getElementById('fp-title').innerText = title;
-        document.getElementById('fp-artist').innerText = artist;
-        document.getElementById('fp-cover').src = cover;
-        document.getElementById('fp-bg').style.backgroundImage = `url('${cover}')`;
-    }
-
-    function togglePlay(e) {
-        e.stopPropagation();
-        if(!currentTrack) return;
-        
-        if(currentTrack.type === 'song' && ytPlayerReady) {
-            ytPlayer.getPlayerState() === YT.PlayerState.PLAYING ? ytPlayer.pauseVideo() : ytPlayer.playVideo();
-        } else {
-            audioEl.paused ? audioEl.play() : audioEl.pause();
-        }
-    }
-
-    function updatePlayIcons(svg) {
-        document.getElementById('mini-play-btn').innerHTML = svg;
-        document.getElementById('fp-play-btn').innerHTML = svg;
-    }
-
-    function startProgress() {
-        clearInterval(progressInterval);
-        progressInterval = setInterval(() => {
-            let curr = 0, dur = 100;
-            if(currentTrack.type === 'song' && ytPlayerReady && ytPlayer.getCurrentTime) {
-                curr = ytPlayer.getCurrentTime(); dur = ytPlayer.getDuration();
-            } else {
-                curr = audioEl.currentTime; dur = audioEl.duration || 100;
-            }
-            document.getElementById('fp-slider').max = dur;
-            document.getElementById('fp-slider').value = curr;
-            document.getElementById('fp-time-current').innerText = fmt(curr);
-            document.getElementById('fp-time-total').innerText = fmt(dur);
-        }, 1000);
-    }
-
-    function seekAudio(val) {
-        if(currentTrack.type === 'song' && ytPlayerReady) ytPlayer.seekTo(val, true);
-        else audioEl.currentTime = val;
-    }
-
-    function fmt(sec) {
-        if(isNaN(sec)) return "0:00";
-        sec = Math.round(sec);
-        return Math.floor(sec/60) + ":" + (sec%60 < 10 ? "0" : "") + (sec%60);
-    }
-
-    // --- UI NAVIGATION & MENUS ---
-    function switchTab(tabId, el) {
+    // --- VIEWS & MENÜS ---
+    function switchView(viewId, element) {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        document.getElementById('view-' + tabId).classList.add('active');
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        el.classList.add('active');
-    }
-
-    function toggleFullScreenPlayer(show) {
-        const fp = document.getElementById('fullPlayer');
-        show ? fp.classList.add('active') : fp.classList.remove('active');
+        document.getElementById('view-' + viewId).classList.add('active');
+        if(element) {
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            element.classList.add('active');
+        }
     }
 
     function openPlusMenu() {
-        document.getElementById('overlayBg').classList.add('active');
-        document.getElementById('plusMenu').classList.add('active');
+        const overlay = document.getElementById('bs-overlay');
+        const sheet = document.getElementById('bs-menu');
+        overlay.classList.add('active');
+        setTimeout(() => sheet.classList.add('active'), 10);
     }
 
     function closePlusMenu() {
-        document.getElementById('overlayBg').classList.remove('active');
-        document.getElementById('plusMenu').classList.remove('active');
+        const overlay = document.getElementById('bs-overlay');
+        const sheet = document.getElementById('bs-menu');
+        sheet.classList.remove('active');
+        setTimeout(() => overlay.classList.remove('active'), 300);
     }
 
     function createNewPlaylist() {
-        const name = prompt("Name der neuen Playlist:");
-        if(name) {
-            library.unshift({
-                id: Date.now().toString(), type: "playlist", title: name,
-                creator: "Du", pinned: false, cover: "https://via.placeholder.com/200/282828/ffffff?text="+name, isGrid: false
+        closePlusMenu();
+        alert("Playlist Funktion aufgerufen! (Erstelle hier eine neue leere Playlist in der Zukunft)");
+    }
+
+    // --- SUCHEN & ITUNES API ---
+    let searchTimeout = null;
+    function performSearch() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            const query = document.getElementById('searchInput').value.trim();
+            if(!query) {
+                document.getElementById('search-local-results').innerHTML = '';
+                document.getElementById('search-itunes-results').innerHTML = 'Tippe etwas ein...';
+                return;
+            }
+
+            // Lokale Suche
+            const localFilter = myLibrary.filter(i => i.title.toLowerCase().includes(query.toLowerCase()));
+            const localContainer = document.getElementById('search-local-results');
+            localContainer.innerHTML = '';
+            localFilter.forEach(item => {
+                localContainer.innerHTML += `
+                    <div class="list-item" onclick="playCustom('yt', '${item.ytId}', '${item.title}', '${item.artist}')">
+                        <img src="https://img.youtube.com/vi/${item.ytId}/hqdefault.jpg" style="border-radius:4px;">
+                        <div class="list-info">
+                            <div class="list-title">${item.title}</div><div class="list-subtitle">Lokal</div>
+                        </div>
+                    </div>
+                `;
             });
-            localStorage.setItem('ultimate_lib', JSON.stringify(library));
-            renderApp();
-            closePlusMenu();
-            switchTab('library', document.querySelectorAll('.nav-item')[2]); // Gehe zu Bibliothek
+            if(localFilter.length === 0) localContainer.innerHTML = '<p style="color:#a7a7a7;">Nichts lokal gefunden.</p>';
+
+            // iTunes Podcast Suche
+            document.getElementById('search-itunes-results').innerHTML = 'Sucht nach Podcasts...';
+            fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=podcast&entity=podcastEpisode&limit=5`)
+                .then(res => res.json())
+                .then(data => {
+                    const itunesContainer = document.getElementById('search-itunes-results');
+                    itunesContainer.innerHTML = '';
+                    if(data.results.length === 0) {
+                        itunesContainer.innerHTML = '<p style="color:#a7a7a7;">Keine Podcasts gefunden.</p>';
+                        return;
+                    }
+                    data.results.forEach(ep => {
+                        itunesContainer.innerHTML += `
+                            <div class="list-item" onclick="playCustom('audio', '${ep.episodeUrl}', '${ep.trackName.replace(/'/g, "\\'")}', '${ep.collectionName.replace(/'/g, "\\'")}', '${ep.artworkUrl160}')">
+                                <img src="${ep.artworkUrl160}" style="border-radius:8px;">
+                                <div class="list-info">
+                                    <div class="list-title">${ep.trackName}</div>
+                                    <div class="list-subtitle">iTunes Podcast</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                })
+                .catch(err => {
+                    document.getElementById('search-itunes-results').innerHTML = 'Fehler bei der iTunes Suche.';
+                });
+
+        }, 500);
+    }
+
+    // --- MULTI-PLAYER LOGIK ---
+    function playCustom(type, srcOrId, title, artist, img) {
+        currentMode = type;
+        
+        // Stoppe den jeweils anderen Player
+        if(type === 'yt') {
+            audioPlayer.pause();
+            if(ytPlayer && ytPlayer.loadVideoById) ytPlayer.loadVideoById(srcOrId);
+        } else if(type === 'audio') {
+            if(ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo();
+            audioPlayer.src = srcOrId;
+            audioPlayer.play();
+        } else if(type === 'podcast') {
+            // Mock für den Homescreen Klick
+            playCustom('yt', '9oD5M_yN1H0', 'Die Epstein-Files: Wer steht drin?', 'MrWissen2go', 'https://is1-ssl.mzstatic.com/image/thumb/Podcasts113/v4/f2/87/40/f2874051-7bfa-c584-3677-22f30691e847/mza_10336214040947094042.jpg/316x316bb.webp');
+            return;
+        }
+
+        const coverUrl = img || (type === 'yt' ? `https://img.youtube.com/vi/${srcOrId}/hqdefault.jpg` : '');
+
+        // UI Update Mini Player
+        document.getElementById('miniPlayer').style.display = 'flex';
+        document.getElementById('mini-title').innerText = title;
+        document.getElementById('mini-artist').innerText = artist;
+        document.getElementById('mini-img').src = coverUrl;
+
+        // UI Update Full Player
+        document.getElementById('fp-title').innerText = title;
+        document.getElementById('fp-artist').innerText = artist;
+        document.getElementById('fp-bg').style.backgroundImage = `url('${coverUrl}')`;
+        document.getElementById('fp-cover-img').src = coverUrl;
+        
+        document.getElementById('fp-context-label').innerText = type === 'audio' ? 'PODCAST EPISODE' : 'PLAYLIST SONG';
+
+        updatePlayButtons(pauseIcon);
+    }
+
+    function togglePlay(event) {
+        if(event) event.stopPropagation();
+        
+        if(currentMode === 'yt') {
+            if(!ytPlayer || !ytPlayer.getPlayerState) return;
+            const state = ytPlayer.getPlayerState();
+            if (state == YT.PlayerState.PLAYING) ytPlayer.pauseVideo();
+            else ytPlayer.playVideo();
+        } else if (currentMode === 'audio') {
+            if(audioPlayer.paused) audioPlayer.play();
+            else audioPlayer.pause();
         }
     }
+
+    function updatePlayButtons(svgPath) {
+        document.getElementById('mini-play-btn').innerHTML = svgPath;
+        document.getElementById('fp-play-btn').innerHTML = svgPath;
+    }
+
+    function startProgressBar() {
+        clearInterval(progressInterval);
+        progressInterval = setInterval(() => {
+            let currentTime = 0;
+            if(currentMode === 'yt' && ytPlayer && ytPlayer.getCurrentTime) {
+                currentTime = ytPlayer.getCurrentTime();
+            } else if (currentMode === 'audio') {
+                currentTime = audioPlayer.currentTime;
+            }
+            document.getElementById('fp-slider').value = currentTime;
+            document.getElementById('fp-time-current').innerText = formatTime(currentTime);
+        }, 500);
+    }
+
+    function seekTo(seconds) {
+        if(currentMode === 'yt' && ytPlayer && ytPlayer.seekTo) {
+            ytPlayer.seekTo(seconds, true);
+        } else if (currentMode === 'audio') {
+            audioPlayer.currentTime = seconds;
+        }
+    }
+
+    function formatTime(timeInSec) {
+        if(isNaN(timeInSec)) return "0:00";
+        timeInSec = Math.round(timeInSec);
+        const m = Math.floor(timeInSec / 60);
+        const s = timeInSec % 60;
+        return m + ":" + (s < 10 ? "0" : "") + s;
+    }
+
+    function openPlayer() { document.getElementById('fullPlayer').classList.add('active'); }
+    function closePlayer() { document.getElementById('fullPlayer').classList.remove('active'); }
+    function prevTrack() { seekTo(0); } // Mock function
+    function nextTrack() { alert("Nächster Track"); } // Mock function
 
     // INIT
     renderApp();
