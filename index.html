@@ -3,198 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MyStream - SoundCloud Edition</title>
-    <script src="https://w.soundcloud.com/player/api.js"></script>
+    <title>Spotify Clone - Full Songs</title>
     <style>
         :root {
             --spotify-green: #1DB954;
-            --bg-dark: #121212;
-            --card-bg: #181818;
-            --text-main: #ffffff;
-            --text-dim: #b3b3b3;
+            --bg-black: #121212;
+            --sidebar-black: #000000;
+            --text-white: #ffffff;
         }
 
         body {
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-main);
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-black);
+            color: var(--text-white);
             margin: 0;
             display: flex;
-            flex-direction: column;
             height: 100vh;
-        }
-
-        header {
-            padding: 20px 40px;
-            background: #000;
-        }
-
-        .container {
-            display: flex;
-            flex: 1;
-            padding: 20px;
-            gap: 20px;
             overflow: hidden;
         }
 
-        /* Playlist Bereich */
-        .playlist-container {
-            flex: 1;
-            background: var(--card-bg);
-            border-radius: 8px;
-            padding: 20px;
-            overflow-y: auto;
-        }
-
-        .song-item {
-            display: flex;
-            align-items: center;
-            padding: 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background 0.2s;
-            margin-bottom: 5px;
-        }
-
-        .song-item:hover { background: #282828; }
-        .song-item.active { color: var(--spotify-green); background: #282828; }
-
-        .song-info { margin-left: 15px; }
-        .song-info div { font-size: 14px; color: var(--text-dim); }
-
-        /* Widget Bereich (Versteckt oder Sichtbar) */
-        .player-sidebar {
-            width: 350px;
-            background: var(--card-bg);
-            border-radius: 8px;
-            padding: 20px;
+        /* Sidebar Layout */
+        nav {
+            width: 240px;
+            background-color: var(--sidebar-black);
             display: flex;
             flex-direction: column;
-            align-items: center;
+            padding: 20px;
+            gap: 20px;
         }
 
-        iframe {
-            border: none;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-
-        .custom-controls {
-            width: 100%;
-            text-align: center;
-        }
-
-        button {
-            background: var(--spotify-green);
-            border: none;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 20px;
+        .nav-item {
+            color: #b3b3b3;
+            text-decoration: none;
             font-weight: bold;
             cursor: pointer;
-            margin: 5px;
         }
 
-        button:hover { transform: scale(1.05); }
+        .nav-item:hover { color: white; }
+
+        /* Hauptinhalt */
+        main {
+            flex: 1;
+            background: linear-gradient(to bottom, #1e1e1e, #121212);
+            padding: 40px;
+            overflow-y: auto;
+            padding-bottom: 120px;
+        }
+
+        .playlist-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .playlist-table th { text-align: left; color: #b3b3b3; border-bottom: 1px solid #282828; padding: 10px; }
+        .playlist-table td { padding: 15px 10px; border-bottom: 1px solid #282828; cursor: pointer; }
+        .playlist-table tr:hover { background: rgba(255,255,255,0.1); }
+
+        /* Player Bar */
+        .player-bar {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: 90px;
+            background-color: #181818;
+            border-top: 1px solid #282828;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 100;
+        }
+
+        .now-playing { width: 30%; display: flex; align-items: center; gap: 15px; }
+        .now-playing img { width: 56px; height: 56px; border-radius: 4px; }
+
+        .video-container {
+            width: 40%;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Wir machen das Video klein, damit man es im Player sieht */
+        #yt-player {
+            width: 200px;
+            height: 60px;
+            border-radius: 8px;
+            border: 1px solid var(--spotify-green);
+        }
     </style>
 </head>
 <body>
 
-<header>
-    <h1 style="color: var(--spotify-green); margin: 0;">MyStream 2026</h1>
-</header>
+<nav>
+    <h2 style="color: white;">Spotify Pro</h2>
+    <div class="nav-item">🏠 Startseite</div>
+    <div class="nav-item">🔍 Suche</div>
+    <div class="nav-item">📚 Bibliothek</div>
+    <hr style="width: 100%; border: 0.5px solid #282828;">
+    <div class="nav-item">Playlist erstellen</div>
+    <div class="nav-item">Lieblingssongs</div>
+</nav>
 
-<div class="container">
-    <div class="playlist-container">
-        <h2>Deine Playlist</h2>
-        <div id="playlist">
-            </div>
+<main>
+    <h1>Meine volle Playlist</h1>
+    <table class="playlist-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Titel</th>
+                <th>Album</th>
+                <th>Aktion</th>
+            </tr>
+        </thead>
+        <tbody id="song-list">
+            </tbody>
+    </table>
+</main>
+
+<div class="player-bar">
+    <div class="now-playing">
+        <img id="current-art" src="https://via.placeholder.com/56" alt="">
+        <div>
+            <div id="current-title" style="font-weight: bold;">Titel wählen</div>
+            <div id="current-artist" style="color: #b3b3b3; font-size: 12px;">Künstler</div>
+        </div>
     </div>
 
-    <div class="player-sidebar">
-        <h3>Aktueller Player</h3>
-        <iframe id="sc-player" width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay" 
-            src="https://w.soundcloud.com/player/?url=https://soundcloud.com/discover/sets/charts-top-50:all-music">
-        </iframe>
-
-        <div class="custom-controls">
-            <button onclick="prevTrack()">⏮</button>
-            <button onclick="togglePlay()">Play / Pause</button>
-            <button onclick="nextTrack()">⏭</button>
-        </div>
-        <p id="now-playing" style="margin-top: 20px; color: var(--text-dim); font-size: 0.9em;"></p>
+    <div class="video-container">
+        <iframe id="yt-player" src="" frameborder="0" allow="autoplay"></iframe>
     </div>
 </div>
 
 <script>
-    // Liste von SoundCloud-URLs (Hier kannst du jeden beliebigen SC-Link einfügen!)
-    const trackList = [
-        { title: "Lofi Hip Hop", artist: "Lofi Girl", url: "https://soundcloud.com/lofi-girl/beats-to-relax-study-to" },
-        { title: "Electronic Vibes", artist: "SoundCloud Artist", url: "https://soundcloud.com/glitchhop/the-fat-rat-xenogenesis" },
-        { title: "Chill Out", artist: "NCS", url: "https://soundcloud.com/nocopyrightsounds/alan-walker-fade-ncs-release" }
+    // Liste mit vollen Songs (YouTube Video IDs)
+    const mySongs = [
+        { 
+            title: "Blinding Lights", 
+            artist: "The Weeknd", 
+            album: "After Hours",
+            art: "https://upload.wikimedia.org/wikipedia/de/c/c1/The_Weeknd_-_Blinding_Lights.png",
+            ytId: "4NRXx6U8ABQ" 
+        },
+        { 
+            title: "Numb", 
+            artist: "Linkin Park", 
+            album: "Meteora",
+            art: "https://upload.wikimedia.org/wikipedia/en/b/b9/Linkin_Park_-_Numb_CD_cover.jpg",
+            ytId: "kXYiU_JCYtU" 
+        },
+        { 
+            title: "Mockingbird", 
+            artist: "Eminem", 
+            album: "Encore",
+            art: "https://upload.wikimedia.org/wikipedia/en/b/b4/Encore_%28Eminem_album%29_coverart.jpg",
+            ytId: "S9bCLPwzSC0" 
+        }
     ];
 
-    const iframe = document.getElementById('sc-player');
-    const widget = SC.Widget(iframe);
-    const playlistDiv = document.getElementById('playlist');
-    let currentIndex = 0;
+    const listContainer = document.getElementById('song-list');
 
-    // Playlist rendern
-    function initPlaylist() {
-        playlistDiv.innerHTML = "";
-        trackList.forEach((track, index) => {
-            const item = document.createElement('div');
-            item.className = `song-item ${index === currentIndex ? 'active' : ''}`;
-            item.innerHTML = `
-                <strong>${index + 1}</strong>
-                <div class="song-info">
-                    <strong>${track.title}</strong>
-                    <div>${track.artist}</div>
-                </div>
+    function init() {
+        mySongs.forEach((song, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${song.title}<br><small style="color:#b3b3b3">${song.artist}</small></td>
+                <td>${song.album}</td>
+                <td style="color:var(--spotify-green)">ABSPIELEN</td>
             `;
-            item.onclick = () => playTrack(index);
-            playlistDiv.appendChild(item);
+            row.onclick = () => playSong(index);
+            listContainer.appendChild(row);
         });
     }
 
-    // Einen bestimmten Track laden
-    function playTrack(index) {
-        currentIndex = index;
-        const track = trackList[index];
+    function playSong(index) {
+        const song = mySongs[index];
+        document.getElementById('current-title').innerText = song.title;
+        document.getElementById('current-artist').innerText = song.artist;
+        document.getElementById('current-art').src = song.art;
         
-        // Lädt die neue URL in das Widget
-        widget.load(track.url, {
-            auto_play: true,
-            show_comments: false,
-            color: "#1DB954"
-        });
-
-        document.getElementById('now-playing').innerText = "Spielt gerade: " + track.title;
-        initPlaylist(); // UI aktualisieren
+        // Das YouTube Video laden mit Autoplay
+        document.getElementById('yt-player').src = `https://www.youtube.com/embed/${song.ytId}?autoplay=1`;
     }
 
-    function togglePlay() {
-        widget.toggle();
-    }
-
-    function nextTrack() {
-        currentIndex = (currentIndex + 1) % trackList.length;
-        playTrack(currentIndex);
-    }
-
-    function prevTrack() {
-        currentIndex = (currentIndex - 1 + trackList.length) % trackList.length;
-        playTrack(currentIndex);
-    }
-
-    // Event: Wenn ein Song zu Ende ist
-    widget.bind(SC.Widget.Events.FINISH, () => {
-        nextTrack();
-    });
-
-    // Initialisierung
-    initPlaylist();
-    document.getElementById('now-playing').innerText = "Wähle einen Song aus der Liste.";
+    init();
 </script>
 
 </body>
