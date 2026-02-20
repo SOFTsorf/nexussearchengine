@@ -2,156 +2,138 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Gemini Pro Animation Creator</title>
+    <title>Gemini Authentic Animation</title>
     <style>
-        body { margin: 0; background: #000; color: white; font-family: 'Inter', -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
-        .ui-panel { background: #111; padding: 20px; border-radius: 16px; border: 1px solid #333; margin-top: 20px; display: flex; flex-direction: column; gap: 15px; width: 450px; z-index: 100; }
-        canvas { border-radius: 12px; box-shadow: 0 0 100px rgba(66, 133, 244, 0.15); background: #000; }
-        input { background: #222; border: 1px solid #444; padding: 12px; color: white; border-radius: 8px; font-size: 16px; outline: none; }
-        .btns { display: flex; gap: 10px; }
-        button { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400&display=swap');
+        body { margin: 0; background: #000; color: white; font-family: 'Inter', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; }
+        .controls { position: absolute; bottom: 30px; background: rgba(15, 15, 15, 0.9); padding: 20px; border-radius: 20px; border: 1px solid #333; display: flex; flex-direction: column; gap: 12px; width: 350px; backdrop-filter: blur(10px); transition: 0.3s; }
+        input { background: #222; border: 1px solid #444; padding: 12px; color: white; border-radius: 10px; font-size: 14px; outline: none; text-align: center; }
+        .btn-group { display: flex; gap: 8px; }
+        button { flex: 1; padding: 12px; border: none; border-radius: 10px; font-weight: 500; cursor: pointer; transition: 0.2s; }
         #recBtn { background: #fff; color: #000; }
         #stopBtn { background: #ea4335; color: #fff; display: none; }
-        button:hover { transform: scale(1.02); opacity: 0.9; }
-        .label { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+        canvas { filter: contrast(1.1) brightness(1.1); }
     </style>
 </head>
 <body>
 
-    <canvas id="mainCanvas" width="1000" height="1000" style="width: 500px; height: 500px;"></canvas>
+    <canvas id="canvas" width="1080" height="1080" style="width: 540px; height: 540px;"></canvas>
 
-    <div class="ui-panel">
-        <span class="label">Text bearbeiten</span>
-        <input type="text" id="userInput" value="gemini.google.com/music">
-        <div class="btns">
-            <button id="recBtn">WebM Video exportieren</button>
-            <button id="stopBtn">Aufnahme stoppen</button>
+    <div class="controls">
+        <input type="text" id="textInput" value="gemini.google.com/music">
+        <div class="btn-group">
+            <button id="recBtn">Video aufnehmen (WebM)</button>
+            <button id="stopBtn">Speichern</button>
         </div>
     </div>
 
 <script>
-    const canvas = document.getElementById('mainCanvas');
+    const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-    const input = document.getElementById('userInput');
+    const textInput = document.getElementById('textInput');
     
-    let time = 0;
+    let frame = 0;
     let recorder;
     let chunks = [];
 
-    // Farben von Google
-    const colors = {
-        blue: '#4285F4',
-        red: '#EA4335',
-        yellow: '#FBBC04',
-        green: '#34A853'
-    };
-
-    function drawGeminiStar(x, y, size) {
+    // Die "echte" Gemini-Stern-Mathematik
+    function drawGeminiPath(ctx, x, y, size) {
         ctx.beginPath();
-        // Erzeugt die ikonische 4-zackige Form mit tiefen Kurven
-        for (let i = 0; i < 4; i++) {
-            const angle = (i * Math.PI) / 2;
-            const nextAngle = ((i + 1) * Math.PI) / 2;
-            
-            const startX = x + Math.cos(angle) * size;
-            const startY = y + Math.sin(angle) * size;
-            const endX = x + Math.cos(nextAngle) * size;
-            const endY = y + Math.sin(nextAngle) * size;
-
-            if (i === 0) ctx.moveTo(startX, startY);
-            // Die Kontrollpunkte liegen nah am Zentrum für den "eingesaugten" Look
-            ctx.quadraticCurveTo(x, y, endX, endY);
-        }
+        const cp = size * 0.12; // Der "Pinch"-Faktor für die schmalen Flanken
+        ctx.moveTo(x, y - size); // Oben
+        ctx.bezierCurveTo(x + cp, y - cp, x + cp, y - cp, x + size, y); // Nach Rechts
+        ctx.bezierCurveTo(x + cp, y + cp, x + cp, y + cp, x, y + size); // Nach Unten
+        ctx.bezierCurveTo(x - cp, y + cp, x - cp, y + cp, x - size, y); // Nach Links
+        ctx.bezierCurveTo(x - cp, y - cp, x - cp, y - cp, x, y - size); // Zurück nach oben
         ctx.closePath();
     }
 
     function render() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = '#000';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         const cx = canvas.width / 2;
         const cy = canvas.height / 2 - 80;
-        const baseSize = 250 + Math.sin(time * 0.03) * 10;
+        const size = 280 + Math.sin(frame * 0.04) * 8; // Sanftes Atmen
 
-        // 1. Äußerer Glow
-        ctx.save();
-        ctx.shadowBlur = 150;
-        ctx.shadowColor = 'rgba(66, 133, 244, 0.3)';
-        drawGeminiStar(cx, cy, baseSize);
-        ctx.fill();
-        ctx.restore();
+        // 1. Hintergrund-Aura (Der blaue Glow)
+        const outerGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, size * 1.5);
+        outerGlow.addColorStop(0, 'rgba(66, 133, 244, 0.15)');
+        outerGlow.addColorStop(1, 'transparent');
+        ctx.fillStyle = outerGlow;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // 2. Liquid Mesh Effekt (simuliert durch bewegte radiale Verläufe)
+        // 2. Der "Liquid Mesh" Stern
         ctx.save();
-        drawGeminiStar(cx, cy, baseSize);
+        drawGeminiPath(ctx, cx, cy, size);
         ctx.clip();
 
-        // Blaues Zentrum
-        const g1 = ctx.createRadialGradient(
-            cx + Math.sin(time * 0.02) * 100, 
-            cy + Math.cos(time * 0.02) * 100, 
-            0, cx, cy, baseSize * 1.2
-        );
-        g1.addColorStop(0, colors.blue);
-        g1.addColorStop(0.4, colors.red);
-        g1.addColorStop(0.7, colors.yellow);
-        g1.addColorStop(1, colors.green);
-        
-        ctx.fillStyle = g1;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // Mehrere Farb-Layer für die organische Bewegung
+        const time = frame * 0.02;
+        const colors = [
+            { c: '#4285F4', x: Math.sin(time) * 100, y: Math.cos(time) * 100 },
+            { c: '#EA4335', x: Math.cos(time * 0.8) * 150, y: Math.sin(time * 0.7) * 120 },
+            { c: '#FBBC04', x: Math.sin(time * 1.2) * 120, y: -Math.cos(time) * 150 },
+            { c: '#34A853', x: -Math.sin(time) * 150, y: Math.cos(time * 0.5) * 100 }
+        ];
 
-        // Weißer Licht-Reflex (huscht über den Stern)
-        const shineX = (time * 5) % (canvas.width * 2) - canvas.width;
-        const gShine = ctx.createLinearGradient(shineX, 0, shineX + 200, 400);
-        gShine.addColorStop(0, 'transparent');
-        gShine.addColorStop(0.5, 'rgba(255,255,255,0.2)');
-        gShine.addColorStop(1, 'transparent');
-        ctx.fillStyle = gShine;
+        colors.forEach(col => {
+            const g = ctx.createRadialGradient(cx + col.x, cy + col.y, 0, cx + col.x, cy + col.y, size * 1.3);
+            g.addColorStop(0, col.c);
+            g.addColorStop(1, 'transparent');
+            ctx.globalCompositeOperation = 'screen';
+            ctx.fillStyle = g;
+            ctx.fill();
+        });
+
+        // 3. Der "Edge Shine" (Der weiße Lichtstrahl, der drüberwandert)
+        ctx.globalCompositeOperation = 'source-over';
+        const shinePos = ((frame * 8) % (canvas.width * 2)) - canvas.width;
+        const shine = ctx.createLinearGradient(shinePos, 0, shinePos + 150, 300);
+        shine.addColorStop(0, 'transparent');
+        shine.addColorStop(0.5, 'rgba(255, 255, 255, 0.35)');
+        shine.addColorStop(1, 'transparent');
+        ctx.fillStyle = shine;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
         ctx.restore();
 
-        // 3. Funkel-Sterne (Sparkles)
-        if (Math.random() > 0.8) {
-            drawSparkle(cx + (Math.random()-0.5)*300, cy + (Math.random()-0.5)*300);
+        // 4. Partikel-Effekt (Kleine weiße Sterne wie im Video)
+        ctx.globalAlpha = 0.6;
+        for(let i=0; i<3; i++) {
+            const px = cx + (Math.random() - 0.5) * 500;
+            const py = cy + (Math.random() - 0.5) * 500;
+            const pSize = Math.random() * 2;
+            ctx.fillStyle = "white";
+            ctx.beginPath();
+            ctx.arc(px, py, pSize, 0, Math.PI*2);
+            ctx.fill();
         }
+        ctx.globalAlpha = 1.0;
 
-        // 4. Typografie
+        // 5. Text-Rendering
         ctx.fillStyle = 'white';
         ctx.textAlign = 'center';
-        ctx.font = '300 42px Inter, sans-serif';
-        ctx.letterSpacing = '1px';
-        ctx.fillText(input.value, cx, cy + baseSize + 150);
+        ctx.font = '300 40px Inter, sans-serif';
+        ctx.letterSpacing = '2px';
+        ctx.fillText(textInput.value, cx, cy + size + 160);
 
-        time++;
+        frame++;
         requestAnimationFrame(render);
     }
 
-    function drawSparkle(x, y) {
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.fillStyle = 'white';
-        ctx.shadowBlur = 20;
-        ctx.shadowColor = 'white';
-        // Ein kleines Kreuz zeichnen
-        ctx.fillRect(-1, -15, 2, 30);
-        ctx.fillRect(-15, -1, 30, 2);
-        ctx.restore();
-    }
-
-    // Export Logik
+    // Video Export Logic
     document.getElementById('recBtn').onclick = () => {
         chunks = [];
         const stream = canvas.captureStream(60);
-        recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' });
+        recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9', bitsPerSecond: 8000000 });
         recorder.ondataavailable = e => chunks.push(e.data);
         recorder.onstop = () => {
             const blob = new Blob(chunks, { type: 'video/webm' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url;
-            a.download = 'gemini-animation.webm';
-            a.click();
+            a.href = url; a.download = 'gemini_final.webm'; a.click();
         };
         recorder.start();
         document.getElementById('recBtn').style.display = 'none';
