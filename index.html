@@ -3,123 +3,183 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meine Eigene Suchmaschine</title>
+    <title>MyStream - Powered by API</title>
     <style>
-        /* Modernes, cleanes Design */
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f8f9fa;
+        :root {
+            --spotify-green: #1DB954;
+            --bg-black: #121212;
+            --sidebar-black: #000000;
+            --text-white: #ffffff;
+            --text-gray: #b3b3b3;
         }
 
-        .search-container {
-            text-align: center;
-            width: 100%;
-            max-width: 600px;
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-black);
+            color: var(--text-white);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .main-container { display: flex; flex: 1; overflow: hidden; }
+
+        nav {
+            width: 240px;
+            background-color: var(--sidebar-black);
             padding: 20px;
         }
 
-        h1 {
-            font-size: 3rem;
-            color: #4285F4;
-            margin-bottom: 30px;
+        main {
+            flex: 1;
+            background: linear-gradient(to bottom, #222, #121212);
+            padding: 30px;
+            overflow-y: auto;
         }
 
-        h1 span:nth-child(2) { color: #EA4335; }
-        h1 span:nth-child(3) { color: #FBBC05; }
-        h1 span:nth-child(4) { color: #34A853; }
+        .song-list { width: 100%; border-collapse: collapse; }
+        .song-list th, .song-list td { text-align: left; padding: 12px; border-bottom: 1px solid #282828; }
+        .song-row:hover { background-color: rgba(255,255,255,0.1); cursor: pointer; }
 
-        .search-box {
-            position: relative;
-            width: 100%;
+        .player-bar {
+            height: 100px;
+            background-color: #181818;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            border-top: 1px solid #282828;
         }
 
-        input[type="text"] {
-            width: 100%;
-            padding: 15px 20px;
-            font-size: 18px;
-            border: 1px solid #dfe1e5;
-            border-radius: 24px;
-            outline: none;
-            transition: box-shadow 0.3s;
-            box-sizing: border-box;
-        }
-
-        input[type="text"]:focus {
-            box-shadow: 0 1px 6px rgba(32,33,36,0.28);
-            border-color: rgba(223,225,229,0);
-        }
-
-        .buttons {
-            margin-top: 20px;
-        }
-
-        button {
-            background-color: #f8f9fa;
-            border: 1px solid #f8f9fa;
-            border-radius: 4px;
-            color: #3c4043;
-            font-size: 14px;
-            margin: 11px 4px;
-            padding: 0 16px;
-            line-height: 36px;
-            min-width: 54px;
-            cursor: pointer;
-            transition: border 0.2s, box-shadow 0.2s;
-        }
-
-        button:hover {
-            box-shadow: 0 1px 1px rgba(0,0,0,0.1);
-            border: 1px solid #dadce0;
-            color: #202124;
-        }
+        .controls { display: flex; flex-direction: column; align-items: center; width: 40%; }
+        .btn-play { background: white; border: none; border-radius: 50%; width: 45px; height: 45px; cursor: pointer; font-size: 20px; }
+        
+        input[type="range"] { width: 100%; accent-color: var(--spotify-green); }
+        
+        .loader { color: var(--spotify-green); font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div class="search-container">
-        <h1>
-            <span>M</span><span>y</span><span>S</span><span>earch</span>
-        </h1>
-        
-        <form id="searchForm">
-            <div class="search-box">
-                <input type="text" id="searchInput" placeholder="Gib deinen Suchbegriff ein..." autofocus>
-            </div>
-            <div class="buttons">
-                <button type="submit">Suche starten</button>
-                <button type="button" onclick="luckyDip()">Auf gut Glück!</button>
-            </div>
-        </form>
+<div class="main-container">
+    <nav>
+        <h2 style="color: var(--spotify-green)">MyStream API</h2>
+        <p style="color: var(--text-gray)">Entdecke freie Musik</p>
+    </nav>
+
+    <main>
+        <h1>Aktuelle Charts (Jamendo API)</h1>
+        <div id="status" class="loader">Lade Songs...</div>
+        <table class="song-list">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Titel</th>
+                    <th>Künstler</th>
+                    <th>Abspielen</th>
+                </tr>
+            </thead>
+            <tbody id="playlist-body"></tbody>
+        </table>
+    </main>
+</div>
+
+<div class="player-bar">
+    <div style="width: 30%">
+        <strong id="track-title">Kein Song gewählt</strong><br>
+        <small id="track-artist" style="color: var(--text-gray);"></small>
     </div>
 
-    <script>
-        const searchForm = document.getElementById('searchForm');
-        const searchInput = document.getElementById('searchInput');
+    <div class="controls">
+        <button class="btn-play" id="playBtn" onclick="togglePlay()">▶</button>
+        <input type="range" id="progress-bar" value="0">
+    </div>
 
-        // Funktion zum Ausführen der Suche
-        searchForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const query = searchInput.value;
-            if (query) {
-                // Leitet an Google weiter (kann durch eigene API ersetzt werden)
-                window.location.href = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
-            }
-        });
+    <div style="width: 30%; text-align: right;">
+        🔊 <input type="range" id="volume-slider" value="70" style="width: 80px;">
+    </div>
+</div>
 
-        // "Auf gut Glück" - bringt dich direkt zum ersten Ergebnis
-        function luckyDip() {
-            const query = searchInput.value;
-            if (query) {
-                window.location.href = `https://www.google.com/search?q=${encodeURIComponent(query)}&btnI=I`;
-            }
+<audio id="audio-player"></audio>
+
+<script>
+    const audio = document.getElementById('audio-player');
+    const playBtn = document.getElementById('playBtn');
+    const progressBar = document.getElementById('progress-bar');
+    const playlistBody = document.getElementById('playlist-body');
+    
+    let songs = [];
+
+    // 1. DATEN VON API LADEN
+    async function fetchSongs() {
+        const client_id = '55d85e78'; // Dies ist ein Test-Key für Jamendo
+        const url = `https://api.jamendo.com/v3.0/tracks/?client_id=${client_id}&format=jsonfull&limit=15&order=popularity_week`;
+
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            songs = data.results;
+            renderPlaylist();
+            document.getElementById('status').innerText = "";
+        } catch (error) {
+            document.getElementById('status').innerText = "Fehler beim Laden der Musik.";
+            console.error(error);
         }
-    </script>
+    }
+
+    // 2. PLAYLIST ANZEIGEN
+    function renderPlaylist() {
+        playlistBody.innerHTML = "";
+        songs.forEach((song, index) => {
+            const row = document.createElement('tr');
+            row.classList.add('song-row');
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${song.name}</td>
+                <td>${song.artist_name}</td>
+                <td>▶</td>
+            `;
+            row.onclick = () => loadSong(index);
+            playlistBody.appendChild(row);
+        });
+    }
+
+    // 3. LOGIK
+    function loadSong(index) {
+        const song = songs[index];
+        audio.src = song.audio; // Die API liefert uns direkt die MP3-URL
+        document.getElementById('track-title').innerText = song.name;
+        document.getElementById('track-artist').innerText = song.artist_name;
+        audio.play();
+        playBtn.innerText = "⏸";
+    }
+
+    function togglePlay() {
+        if (audio.paused) {
+            audio.play();
+            playBtn.innerText = "⏸";
+        } else {
+            audio.pause();
+            playBtn.innerText = "▶";
+        }
+    }
+
+    audio.ontimeupdate = () => {
+        progressBar.value = (audio.currentTime / audio.duration) * 100 || 0;
+    };
+
+    progressBar.oninput = () => {
+        audio.currentTime = (progressBar.value / 100) * audio.duration;
+    };
+
+    document.getElementById('volume-slider').oninput = (e) => {
+        audio.volume = e.target.value / 100;
+    };
+
+    // Initialisierung
+    fetchSongs();
+</script>
 
 </body>
 </html>
