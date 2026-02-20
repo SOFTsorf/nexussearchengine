@@ -2,193 +2,169 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Gemini Animation Creator</title>
+    <title>Gemini Pro Animation Creator</title>
     <style>
-        :root { --bg: #050505; --accent: #4285f4; }
-        body { margin: 0; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; }
-        
-        .container { position: relative; display: flex; flex-direction: column; align-items: center; gap: 20px; z-index: 10; }
-        
-        canvas { 
-            background: #000; 
-            border-radius: 12px; 
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5); 
-            max-width: 90vw;
-        }
-
-        .controls { 
-            background: rgba(255,255,255,0.05); 
-            padding: 20px; 
-            border-radius: 15px; 
-            backdrop-filter: blur(10px);
-            display: flex; 
-            flex-direction: column; 
-            gap: 15px;
-            width: 400px;
-        }
-
-        input {
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
-            padding: 10px;
-            color: white;
-            border-radius: 5px;
-            font-size: 16px;
-        }
-
+        body { margin: 0; background: #000; color: white; font-family: 'Inter', -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
+        .ui-panel { background: #111; padding: 20px; border-radius: 16px; border: 1px solid #333; margin-top: 20px; display: flex; flex-direction: column; gap: 15px; width: 450px; z-index: 100; }
+        canvas { border-radius: 12px; box-shadow: 0 0 100px rgba(66, 133, 244, 0.15); background: #000; }
+        input { background: #222; border: 1px solid #444; padding: 12px; color: white; border-radius: 8px; font-size: 16px; outline: none; }
         .btns { display: flex; gap: 10px; }
-        button {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 5px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        #recordBtn { background: #4285f4; color: white; }
-        #stopBtn { background: #ea4335; color: white; display: none; }
-        button:hover { opacity: 0.8; transform: translateY(-2px); }
+        button { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        #recBtn { background: #fff; color: #000; }
+        #stopBtn { background: #ea4335; color: #fff; display: none; }
+        button:hover { transform: scale(1.02); opacity: 0.9; }
+        .label { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <canvas id="canvas" width="800" height="600"></canvas>
+    <canvas id="mainCanvas" width="1000" height="1000" style="width: 500px; height: 500px;"></canvas>
 
-    <div class="controls">
-        <label>Dein Text:</label>
-        <input type="text" id="textInput" value="gemini.google.com/music" placeholder="Text eingeben...">
-        
+    <div class="ui-panel">
+        <span class="label">Text bearbeiten</span>
+        <input type="text" id="userInput" value="gemini.google.com/music">
         <div class="btns">
-            <button id="recordBtn">Aufnahme starten (WebM)</button>
-            <button id="stopBtn">Stoppen & Speichern</button>
+            <button id="recBtn">WebM Video exportieren</button>
+            <button id="stopBtn">Aufnahme stoppen</button>
         </div>
     </div>
-</div>
 
 <script>
-    const canvas = document.getElementById('canvas');
+    const canvas = document.getElementById('mainCanvas');
     const ctx = canvas.getContext('2d');
-    const textInput = document.getElementById('textInput');
-    const recordBtn = document.getElementById('recordBtn');
-    const stopBtn = document.getElementById('stopBtn');
-
+    const input = document.getElementById('userInput');
+    
     let time = 0;
-    let mediaRecorder;
+    let recorder;
     let chunks = [];
 
-    // Animation Properties
-    const particles = Array.from({ length: 40 }, () => ({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        s: Math.random() * 2 + 1,
-        v: Math.random() * 0.5 + 0.2
-    }));
+    // Farben von Google
+    const colors = {
+        blue: '#4285F4',
+        red: '#EA4335',
+        yellow: '#FBBC04',
+        green: '#34A853'
+    };
 
-    function drawStar(ctx, x, y, size) {
+    function drawGeminiStar(x, y, size) {
         ctx.beginPath();
-        // Die mathematische Form des Gemini-Sterns (Hypozykloide-artig)
+        // Erzeugt die ikonische 4-zackige Form mit tiefen Kurven
         for (let i = 0; i < 4; i++) {
             const angle = (i * Math.PI) / 2;
             const nextAngle = ((i + 1) * Math.PI) / 2;
             
-            const cx = x + Math.cos(angle) * size;
-            const cy = y + Math.sin(angle) * size;
-            
-            if (i === 0) ctx.moveTo(cx, cy);
-            
-            // Kontrollpunkt in der Mitte für die Einbuchtung
-            ctx.quadraticCurveTo(x, y, x + Math.cos(nextAngle) * size, y + Math.sin(nextAngle) * size);
+            const startX = x + Math.cos(angle) * size;
+            const startY = y + Math.sin(angle) * size;
+            const endX = x + Math.cos(nextAngle) * size;
+            const endY = y + Math.sin(nextAngle) * size;
+
+            if (i === 0) ctx.moveTo(startX, startY);
+            // Die Kontrollpunkte liegen nah am Zentrum für den "eingesaugten" Look
+            ctx.quadraticCurveTo(x, y, endX, endY);
         }
         ctx.closePath();
     }
 
-    function animate() {
-        // Black background
+    function render() {
         ctx.fillStyle = '#000';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // 1. Hintergrund-Partikel (Subtiler Glitzer)
-        ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
-        particles.forEach(p => {
-            p.y -= p.v;
-            if (p.y < 0) p.y = canvas.height;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.s, 0, Math.PI * 2);
-            ctx.fill();
-        });
+        const cx = canvas.width / 2;
+        const cy = canvas.height / 2 - 80;
+        const baseSize = 250 + Math.sin(time * 0.03) * 10;
 
-        const centerX = canvas.width / 2;
-        const centerY = canvas.height / 2 - 40;
-        const baseSize = 130 + Math.sin(time * 0.02) * 5;
-
-        // 2. Mesh Gradient Simulation
-        // Wir zeichnen mehrere Ebenen für den flüssigen Look
+        // 1. Äußerer Glow
         ctx.save();
-        
-        // Glow Effekt außen
-        ctx.shadowBlur = 60;
-        ctx.shadowColor = 'rgba(66, 133, 244, 0.4)';
+        ctx.shadowBlur = 150;
+        ctx.shadowColor = 'rgba(66, 133, 244, 0.3)';
+        drawGeminiStar(cx, cy, baseSize);
+        ctx.fill();
+        ctx.restore();
 
-        // Clip-Pfad für den Stern, damit der Verlauf nur darin ist
-        drawStar(ctx, centerX, centerY, baseSize);
+        // 2. Liquid Mesh Effekt (simuliert durch bewegte radiale Verläufe)
+        ctx.save();
+        drawGeminiStar(cx, cy, baseSize);
         ctx.clip();
 
-        // Bewegte Farbverläufe (Blau, Rot, Gelb, Grün)
-        const xOff = Math.sin(time * 0.03) * 50;
-        const yOff = Math.cos(time * 0.03) * 50;
-
-        const g1 = ctx.createRadialGradient(centerX + xOff, centerY - yOff, 0, centerX, centerY, baseSize * 1.5);
-        g1.addColorStop(0, '#4285F4'); // Google Blau
-        g1.addColorStop(0.5, '#EA4335'); // Google Rot
-        g1.addColorStop(0.8, '#FBBC04'); // Google Gelb
-        g1.addColorStop(1, '#34A853'); // Google Grün
+        // Blaues Zentrum
+        const g1 = ctx.createRadialGradient(
+            cx + Math.sin(time * 0.02) * 100, 
+            cy + Math.cos(time * 0.02) * 100, 
+            0, cx, cy, baseSize * 1.2
+        );
+        g1.addColorStop(0, colors.blue);
+        g1.addColorStop(0.4, colors.red);
+        g1.addColorStop(0.7, colors.yellow);
+        g1.addColorStop(1, colors.green);
         
         ctx.fillStyle = g1;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Weißer Licht-Reflex (huscht über den Stern)
+        const shineX = (time * 5) % (canvas.width * 2) - canvas.width;
+        const gShine = ctx.createLinearGradient(shineX, 0, shineX + 200, 400);
+        gShine.addColorStop(0, 'transparent');
+        gShine.addColorStop(0.5, 'rgba(255,255,255,0.2)');
+        gShine.addColorStop(1, 'transparent');
+        ctx.fillStyle = gShine;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
         ctx.restore();
 
-        // 3. Text
-        ctx.fillStyle = "white";
-        ctx.font = "300 24px 'Segoe UI', sans-serif";
-        ctx.textAlign = "center";
-        ctx.letterSpacing = "1px";
-        ctx.fillText(textInput.value, centerX, centerY + baseSize + 60);
+        // 3. Funkel-Sterne (Sparkles)
+        if (Math.random() > 0.8) {
+            drawSparkle(cx + (Math.random()-0.5)*300, cy + (Math.random()-0.5)*300);
+        }
 
-        time += 1;
-        requestAnimationFrame(animate);
+        // 4. Typografie
+        ctx.fillStyle = 'white';
+        ctx.textAlign = 'center';
+        ctx.font = '300 42px Inter, sans-serif';
+        ctx.letterSpacing = '1px';
+        ctx.fillText(input.value, cx, cy + baseSize + 150);
+
+        time++;
+        requestAnimationFrame(render);
+    }
+
+    function drawSparkle(x, y) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.fillStyle = 'white';
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = 'white';
+        // Ein kleines Kreuz zeichnen
+        ctx.fillRect(-1, -15, 2, 30);
+        ctx.fillRect(-15, -1, 30, 2);
+        ctx.restore();
     }
 
     // Export Logik
-    recordBtn.onclick = () => {
+    document.getElementById('recBtn').onclick = () => {
         chunks = [];
-        const stream = canvas.captureStream(60); // 60 FPS
-        mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' });
-        
-        mediaRecorder.ondataavailable = e => chunks.push(e.data);
-        mediaRecorder.onstop = () => {
+        const stream = canvas.captureStream(60);
+        recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' });
+        recorder.ondataavailable = e => chunks.push(e.data);
+        recorder.onstop = () => {
             const blob = new Blob(chunks, { type: 'video/webm' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'gemini_custom.webm';
+            a.download = 'gemini-animation.webm';
             a.click();
         };
-
-        mediaRecorder.start();
-        recordBtn.style.display = 'none';
-        stopBtn.style.display = 'block';
+        recorder.start();
+        document.getElementById('recBtn').style.display = 'none';
+        document.getElementById('stopBtn').style.display = 'block';
     };
 
-    stopBtn.onclick = () => {
-        mediaRecorder.stop();
-        recordBtn.style.display = 'block';
-        stopBtn.style.display = 'none';
+    document.getElementById('stopBtn').onclick = () => {
+        recorder.stop();
+        document.getElementById('recBtn').style.display = 'block';
+        document.getElementById('stopBtn').style.display = 'none';
     };
 
-    animate();
+    render();
 </script>
-
 </body>
 </html>
