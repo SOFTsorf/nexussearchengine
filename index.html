@@ -2,151 +2,103 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Gemini Authentic Animation</title>
+    <title>Gemini AI Studio</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400&display=swap');
-        body { margin: 0; background: #000; color: white; font-family: 'Inter', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; }
-        .controls { position: absolute; bottom: 30px; background: rgba(15, 15, 15, 0.9); padding: 20px; border-radius: 20px; border: 1px solid #333; display: flex; flex-direction: column; gap: 12px; width: 350px; backdrop-filter: blur(10px); transition: 0.3s; }
-        input { background: #222; border: 1px solid #444; padding: 12px; color: white; border-radius: 10px; font-size: 14px; outline: none; text-align: center; }
-        .btn-group { display: flex; gap: 8px; }
-        button { flex: 1; padding: 12px; border: none; border-radius: 10px; font-weight: 500; cursor: pointer; transition: 0.2s; }
-        #recBtn { background: #fff; color: #000; }
-        #stopBtn { background: #ea4335; color: #fff; display: none; }
-        canvas { filter: contrast(1.1) brightness(1.1); }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300&display=swap');
+        
+        body { margin: 0; background: #000; color: white; font-family: 'Inter', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+        
+        #canvas-container { position: relative; width: 600px; height: 600px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        
+        /* Das Lottie-Element */
+        #lottie-player { width: 100%; height: 80%; }
+
+        /* Der anpassbare Text im Google-Stil */
+        #custom-text { margin-top: -40px; font-size: 28px; letter-spacing: 1.5px; color: #fff; text-align: center; width: 100%; outline: none; border: none; background: transparent; }
+
+        .controls { position: absolute; bottom: 40px; background: rgba(20,20,20,0.8); padding: 20px; border-radius: 15px; border: 1px solid #333; display: flex; flex-direction: column; gap: 10px; backdrop-filter: blur(10px); }
+        
+        input#text-input { background: #111; border: 1px solid #444; color: white; padding: 10px; border-radius: 8px; font-size: 16px; width: 280px; text-align: center; }
+        
+        button { background: #fff; color: #000; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:hover { background: #ccc; }
+        #stopBtn { background: #ea4335; color: white; display: none; }
     </style>
 </head>
 <body>
 
-    <canvas id="canvas" width="1080" height="1080" style="width: 540px; height: 540px;"></canvas>
-
-    <div class="controls">
-        <input type="text" id="textInput" value="gemini.google.com/music">
-        <div class="btn-group">
-            <button id="recBtn">Video aufnehmen (WebM)</button>
-            <button id="stopBtn">Speichern</button>
-        </div>
+    <div id="canvas-container">
+        <div id="lottie-player"></div>
+        <div id="custom-text">gemini.google.com/music</div>
     </div>
 
-<script>
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-    const textInput = document.getElementById('textInput');
-    
-    let frame = 0;
-    let recorder;
-    let chunks = [];
+    <div class="controls">
+        <input type="text" id="text-input" value="gemini.google.com/music" placeholder="Text hier eingeben...">
+        <button id="startBtn">Als WebM Video aufnehmen</button>
+        <button id="stopBtn">Aufnahme stoppen & speichern</button>
+    </div>
 
-    // Die "echte" Gemini-Stern-Mathematik
-    function drawGeminiPath(ctx, x, y, size) {
-        ctx.beginPath();
-        const cp = size * 0.12; // Der "Pinch"-Faktor für die schmalen Flanken
-        ctx.moveTo(x, y - size); // Oben
-        ctx.bezierCurveTo(x + cp, y - cp, x + cp, y - cp, x + size, y); // Nach Rechts
-        ctx.bezierCurveTo(x + cp, y + cp, x + cp, y + cp, x, y + size); // Nach Unten
-        ctx.bezierCurveTo(x - cp, y + cp, x - cp, y + cp, x - size, y); // Nach Links
-        ctx.bezierCurveTo(x - cp, y - cp, x - cp, y - cp, x, y - size); // Zurück nach oben
-        ctx.closePath();
-    }
+    <script>
+        const textDisplay = document.getElementById('custom-text');
+        const textInput = document.getElementById('text-input');
+        const playerContainer = document.getElementById('lottie-player');
 
-    function render() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#000';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        const cx = canvas.width / 2;
-        const cy = canvas.height / 2 - 80;
-        const size = 280 + Math.sin(frame * 0.04) * 8; // Sanftes Atmen
-
-        // 1. Hintergrund-Aura (Der blaue Glow)
-        const outerGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, size * 1.5);
-        outerGlow.addColorStop(0, 'rgba(66, 133, 244, 0.15)');
-        outerGlow.addColorStop(1, 'transparent');
-        ctx.fillStyle = outerGlow;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        // 2. Der "Liquid Mesh" Stern
-        ctx.save();
-        drawGeminiPath(ctx, cx, cy, size);
-        ctx.clip();
-
-        // Mehrere Farb-Layer für die organische Bewegung
-        const time = frame * 0.02;
-        const colors = [
-            { c: '#4285F4', x: Math.sin(time) * 100, y: Math.cos(time) * 100 },
-            { c: '#EA4335', x: Math.cos(time * 0.8) * 150, y: Math.sin(time * 0.7) * 120 },
-            { c: '#FBBC04', x: Math.sin(time * 1.2) * 120, y: -Math.cos(time) * 150 },
-            { c: '#34A853', x: -Math.sin(time) * 150, y: Math.cos(time * 0.5) * 100 }
-        ];
-
-        colors.forEach(col => {
-            const g = ctx.createRadialGradient(cx + col.x, cy + col.y, 0, cx + col.x, cy + col.y, size * 1.3);
-            g.addColorStop(0, col.c);
-            g.addColorStop(1, 'transparent');
-            ctx.globalCompositeOperation = 'screen';
-            ctx.fillStyle = g;
-            ctx.fill();
+        // 1. Text-Synchronisation
+        textInput.addEventListener('input', (e) => {
+            textDisplay.innerText = e.target.value;
         });
 
-        // 3. Der "Edge Shine" (Der weiße Lichtstrahl, der drüberwandert)
-        ctx.globalCompositeOperation = 'source-over';
-        const shinePos = ((frame * 8) % (canvas.width * 2)) - canvas.width;
-        const shine = ctx.createLinearGradient(shinePos, 0, shinePos + 150, 300);
-        shine.addColorStop(0, 'transparent');
-        shine.addColorStop(0.5, 'rgba(255, 255, 255, 0.35)');
-        shine.addColorStop(1, 'transparent');
-        ctx.fillStyle = shine;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        ctx.restore();
+        // 2. Lottie Animation laden
+        // Nutze hier "Gemini Google AI.json" für die animierte Version
+        const animation = lottie.loadAnimation({
+            container: playerContainer,
+            renderer: 'canvas', // WICHTIG für Video-Capture
+            loop: true,
+            autoplay: true,
+            path: 'Gemini Google AI.json' 
+        });
 
-        // 4. Partikel-Effekt (Kleine weiße Sterne wie im Video)
-        ctx.globalAlpha = 0.6;
-        for(let i=0; i<3; i++) {
-            const px = cx + (Math.random() - 0.5) * 500;
-            const py = cy + (Math.random() - 0.5) * 500;
-            const pSize = Math.random() * 2;
-            ctx.fillStyle = "white";
-            ctx.beginPath();
-            ctx.arc(px, py, pSize, 0, Math.PI*2);
-            ctx.fill();
-        }
-        ctx.globalAlpha = 1.0;
+        // 3. Video-Aufnahme Logik
+        let mediaRecorder;
+        let recordedChunks = [];
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
 
-        // 5. Text-Rendering
-        ctx.fillStyle = 'white';
-        ctx.textAlign = 'center';
-        ctx.font = '300 40px Inter, sans-serif';
-        ctx.letterSpacing = '2px';
-        ctx.fillText(textInput.value, cx, cy + size + 160);
+        startBtn.onclick = async () => {
+            recordedChunks = [];
+            // Wir greifen das Canvas-Element ab, das Lottie erstellt
+            const canvas = playerContainer.querySelector('canvas');
+            const stream = canvas.captureStream(60); // 60 FPS
+            
+            mediaRecorder = new MediaRecorder(stream, {
+                mimeType: 'video/webm;codecs=vp9',
+                bitsPerSecond: 5000000 // Hohe Qualität
+            });
 
-        frame++;
-        requestAnimationFrame(render);
-    }
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) recordedChunks.push(e.data);
+            };
 
-    // Video Export Logic
-    document.getElementById('recBtn').onclick = () => {
-        chunks = [];
-        const stream = canvas.captureStream(60);
-        recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9', bitsPerSecond: 8000000 });
-        recorder.ondataavailable = e => chunks.push(e.data);
-        recorder.onstop = () => {
-            const blob = new Blob(chunks, { type: 'video/webm' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url; a.download = 'gemini_final.webm'; a.click();
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'gemini-custom-animation.webm';
+                a.click();
+            };
+
+            mediaRecorder.start();
+            startBtn.style.display = 'none';
+            stopBtn.style.display = 'block';
         };
-        recorder.start();
-        document.getElementById('recBtn').style.display = 'none';
-        document.getElementById('stopBtn').style.display = 'block';
-    };
 
-    document.getElementById('stopBtn').onclick = () => {
-        recorder.stop();
-        document.getElementById('recBtn').style.display = 'block';
-        document.getElementById('stopBtn').style.display = 'none';
-    };
-
-    render();
-</script>
+        stopBtn.onclick = () => {
+            mediaRecorder.stop();
+            startBtn.style.display = 'block';
+            stopBtn.style.display = 'none';
+        };
+    </script>
 </body>
 </html>
