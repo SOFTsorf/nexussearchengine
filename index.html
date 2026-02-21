@@ -2,103 +2,39 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Gemini AI Studio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini Animation Loop</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300&display=swap');
-        
-        body { margin: 0; background: #000; color: white; font-family: 'Inter', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
-        
-        #canvas-container { position: relative; width: 600px; height: 600px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        
-        /* Das Lottie-Element */
-        #lottie-player { width: 100%; height: 80%; }
-
-        /* Der anpassbare Text im Google-Stil */
-        #custom-text { margin-top: -40px; font-size: 28px; letter-spacing: 1.5px; color: #fff; text-align: center; width: 100%; outline: none; border: none; background: transparent; }
-
-        .controls { position: absolute; bottom: 40px; background: rgba(20,20,20,0.8); padding: 20px; border-radius: 15px; border: 1px solid #333; display: flex; flex-direction: column; gap: 10px; backdrop-filter: blur(10px); }
-        
-        input#text-input { background: #111; border: 1px solid #444; color: white; padding: 10px; border-radius: 8px; font-size: 16px; width: 280px; text-align: center; }
-        
-        button { background: #fff; color: #000; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        button:hover { background: #ccc; }
-        #stopBtn { background: #ea4335; color: white; display: none; }
+        body {
+            margin: 0;
+            background-color: #000; /* Schwarzer Hintergrund wie im Original */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #lottie-container {
+            width: 500px; /* Größe kannst du hier anpassen */
+            height: 500px;
+        }
     </style>
 </head>
 <body>
 
-    <div id="canvas-container">
-        <div id="lottie-player"></div>
-        <div id="custom-text">gemini.google.com/music</div>
-    </div>
-
-    <div class="controls">
-        <input type="text" id="text-input" value="gemini.google.com/music" placeholder="Text hier eingeben...">
-        <button id="startBtn">Als WebM Video aufnehmen</button>
-        <button id="stopBtn">Aufnahme stoppen & speichern</button>
-    </div>
+    <div id="lottie-container"></div>
 
     <script>
-        const textDisplay = document.getElementById('custom-text');
-        const textInput = document.getElementById('text-input');
-        const playerContainer = document.getElementById('lottie-player');
-
-        // 1. Text-Synchronisation
-        textInput.addEventListener('input', (e) => {
-            textDisplay.innerText = e.target.value;
-        });
-
-        // 2. Lottie Animation laden
-        // Nutze hier "Gemini Google AI.json" für die animierte Version
+        // Animation initialisieren
         const animation = lottie.loadAnimation({
-            container: playerContainer,
-            renderer: 'canvas', // WICHTIG für Video-Capture
-            loop: true,
-            autoplay: true,
+            container: document.getElementById('lottie-container'), // Das Ziel-Element
+            renderer: 'svg', // Rendert als scharfe Vektorgrafik
+            loop: true,      // Endlosschleife aktivieren
+            autoplay: true,  // Sofort starten
+            // Hier den Namen deiner Datei eintragen:
             path: 'Gemini Google AI.json' 
         });
-
-        // 3. Video-Aufnahme Logik
-        let mediaRecorder;
-        let recordedChunks = [];
-        const startBtn = document.getElementById('startBtn');
-        const stopBtn = document.getElementById('stopBtn');
-
-        startBtn.onclick = async () => {
-            recordedChunks = [];
-            // Wir greifen das Canvas-Element ab, das Lottie erstellt
-            const canvas = playerContainer.querySelector('canvas');
-            const stream = canvas.captureStream(60); // 60 FPS
-            
-            mediaRecorder = new MediaRecorder(stream, {
-                mimeType: 'video/webm;codecs=vp9',
-                bitsPerSecond: 5000000 // Hohe Qualität
-            });
-
-            mediaRecorder.ondataavailable = (e) => {
-                if (e.data.size > 0) recordedChunks.push(e.data);
-            };
-
-            mediaRecorder.onstop = () => {
-                const blob = new Blob(recordedChunks, { type: 'video/webm' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'gemini-custom-animation.webm';
-                a.click();
-            };
-
-            mediaRecorder.start();
-            startBtn.style.display = 'none';
-            stopBtn.style.display = 'block';
-        };
-
-        stopBtn.onclick = () => {
-            mediaRecorder.stop();
-            startBtn.style.display = 'block';
-            stopBtn.style.display = 'none';
-        };
     </script>
 </body>
 </html>
